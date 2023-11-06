@@ -53,6 +53,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# 设置rest_framework的全局配置
+REST_FRAMEWORK = {
+    # 认证方式
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
+        'knox.auth.TokenAuthentication',
+        ),
+}
+
 ROOT_URLCONF = 'acount_book.urls'
 
 TEMPLATES = [

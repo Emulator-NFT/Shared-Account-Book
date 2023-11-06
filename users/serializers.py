@@ -15,18 +15,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         return MyUser.objects.create_user(**validated_data)
     
 
-class LoginSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MyUser
-        fields = ['username', 'password']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-    
+# 不能继承ModelSerializer，因为会自动调用create方法，而登录不需要创建用户
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
     def validate(self, data):
         user = authenticate(**data)
         if user is not None:
             return user
         else:
             raise serializers.ValidationError('用户名或密码错误')
-    
