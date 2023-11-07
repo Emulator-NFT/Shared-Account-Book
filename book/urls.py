@@ -5,7 +5,7 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register(r'ledgers', views.LedgerViewSet)
-# router.register(r'entries', views.EntryViewSet)
+router.register(r'entries', views.EntryViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -3,13 +3,6 @@ from rest_framework import serializers
 
 from .models import Ledger, Entry
 
-
-class EntrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Entry
-        exclude = ('user', 'ledgers')
-
-
 class LedgerSerializer(serializers.ModelSerializer):
     
     # entries = EntrySerializer(many=True, read_only=True)
@@ -18,3 +11,13 @@ class LedgerSerializer(serializers.ModelSerializer):
         model = Ledger
         exclude = ('user',)
         # fields = ('id', 'title', 'icon', 'date_created', 'description', 'entries')
+
+
+class EntrySerializer(serializers.ModelSerializer):
+    
+    # ledgers = LedgerSerializer(many=True, read_only=True)
+    # 默认情况下，返回响应的ledgers字段只有id, 上面的代码可以返回完整的Ledger对象
+    class Meta:
+        model = Entry
+        # exclude = ('user', 'ledgers',)
+        exclude = ('user',)
