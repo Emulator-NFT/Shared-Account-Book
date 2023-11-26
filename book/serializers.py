@@ -3,14 +3,17 @@ from rest_framework import serializers
 
 from .models import Ledger, Entry
 
+
 class LedgerSerializer(serializers.ModelSerializer):
     
-    # entries = EntrySerializer(many=True, read_only=True)
+    # entries = 'EntrySerializer(many=True, read_only=True)'
+    entries = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    # 上面2种写法都行
 
     class Meta:
         model = Ledger
-        exclude = ('user',)
-        # fields = ('id', 'title', 'icon', 'date_created', 'description', 'entries')
+        # exclude = ('user',)
+        fields = ('id', 'title', 'icon', 'date_created', 'description', 'entries')
 
 
 class EntrySerializer(serializers.ModelSerializer):
