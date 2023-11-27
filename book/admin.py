@@ -26,7 +26,7 @@ class LedgerAdmin(admin.ModelAdmin):
     
 
 class EntryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'amount', 'category', 'date_created', 'notes')
+    list_display = ('id', 'title', 'entry_type', 'amount', 'category', 'date_created', 'notes')
     list_display_links = ('id', 'title')
     search_fields = ('title', 'notes')
     list_per_page = 25
