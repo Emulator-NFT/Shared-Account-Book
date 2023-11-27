@@ -26,7 +26,7 @@ class Entry(models.Model):
     )
     entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE, default='expense')
     title = models.CharField(max_length=20)
-    amount = models.IntegerField(default=0)             # 金额 单位：分, 正入，负出
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ledgers = models.ManyToManyField(to=Ledger, related_name='entries')
     category = models.IntegerField(default=0, blank=True) # 0: 其他, 1: 充值缴费, 2: 交通出行
     # TODO: category新建一个表, 以外键的形式关联
