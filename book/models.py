@@ -17,6 +17,20 @@ class Ledger(models.Model):
     def __str__(self):
         return self.title
 
+# 收支类型
+class Category(models.Model):
+    user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)
+    CATEGORY_TYPE = (
+        ('income', '收入'),
+        ('expense', '支出'),
+    )
+    name = models.CharField(max_length=20)  # 名称
+    icon = models.IntegerField(default=1, blank=True)  # 图标
+    category_type = models.CharField(max_length=10, choices=CATEGORY_TYPE, default='expense')  # 区分收入和支出类型
+
+    def __str__(self):
+        return self.name
+
 # 收支明细
 class Entry(models.Model):
     user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)
@@ -28,11 +42,9 @@ class Entry(models.Model):
     title = models.CharField(max_length=20)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ledgers = models.ManyToManyField(to=Ledger, related_name='entries')
-    category = models.IntegerField(default=0, blank=True) # 0: 其他, 1: 充值缴费, 2: 交通出行
-    # TODO: category新建一个表, 以外键的形式关联
+    category = models.ForeignKey(to=Category, on_delete=models.SET_DEFAULT, default=1, blank=True)
     date_created = models.DateTimeField(default=timezone.now, blank=True)
     notes = models.CharField(max_length=100, blank=True, null=True)  # 备注
-    # TODO: 备注新建一个表，可以添加文字和图片
 
     def __str__(self):
         return self.title
