@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 
+# 注册
 class RegisterView(GenericAPIView):
     serializer_class = RegisterSerializer
 
@@ -24,7 +25,7 @@ class RegisterView(GenericAPIView):
         else:
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# 登录
 class LoginView(GenericAPIView):
     serializer_class = LoginSerializer
 
@@ -34,13 +35,12 @@ class LoginView(GenericAPIView):
             user = serializer.validated_data
             token = AuthToken.objects.create(user)[1]
             return response.Response({"uid": user.id,
-                                      "avatar": user.avatar,
                                       "token": token}, 
                                      status=status.HTTP_200_OK)
         else:
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-
+# 登出
 class LogoutView(GenericAPIView):
     # authentication_classes = [knox.auth.TokenAuthentication, ] // knox.auth.TokenAuthentication
     permission_classes = [permissions.IsAuthenticated, ]

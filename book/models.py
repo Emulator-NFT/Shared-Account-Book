@@ -12,7 +12,7 @@ class Ledger(models.Model):
     title = models.CharField(max_length=20)
     icon = models.IntegerField(default=0, blank=True)
     date_created = models.DateTimeField(default=timezone.now, blank=True)
-    description = models.CharField(max_length=100, blank=True, null=True)
+    description = models.CharField(max_length=100, blank=True, default='')  # 账本描述
 
     def __str__(self):
         return self.title
