@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
 from django.db.models import Q
-from .models import Ledger, Entry
-from .serializers import LedgerSerializer, EntrySerializer
+from .models import Ledger, Entry, Category
+from .serializers import LedgerSerializer, EntrySerializer, CategorySerializer
 
 # Create your views here.
 
@@ -51,3 +51,16 @@ class EntryViewSet(viewsets.ModelViewSet):
         return self.queryset
 
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    def get_queryset(self):
+        self.queryset = self.queryset.filter(user=self.request.user)
+
+        category_type = self.request.query_params.get('category_type')
+        if category_type:
+            self.queryset = self.queryset.filter(category_type=category_type)
+        return self.queryset
