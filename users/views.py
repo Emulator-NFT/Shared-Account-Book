@@ -47,3 +47,32 @@ class LogoutView(GenericAPIView):
     def post(self, request):
         AuthToken.objects.filter(user = request.user).delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+# 用户信息查询和修改
+class UserProfileView(GenericAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated, ]
+
+    def get(self, request):
+        user = request.user
+        serializer = self.get_serializer(user)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self, request):
+        user = request.user
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

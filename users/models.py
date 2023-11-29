@@ -1,7 +1,8 @@
+import uuid
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, FileExtensionValidator
 
 # Create your models here.
 
@@ -37,7 +38,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(null=True, blank=True, unique=True)
     phone_validator = RegexValidator(regex=r'^[0-9]{11}$', message='手机号码格式错误')
     phone = models.CharField(max_length=11, null=True, blank=True, validators=[phone_validator])
-    avatar = models.IntegerField(default=0, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', default='avatars/default.png', blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     date_joined = models.DateTimeField(default=timezone.now, blank=True)
 
     is_staff = models.BooleanField(default=False)
@@ -56,3 +57,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     #     return True
     # def has_module_perms(self, app_label: str) -> bool:
     #     return super().has_module_perms(app_label)
+
+    # def save(self, *args, **kwargs):
+    #     # Perform custom file processing here
+    #     super().save(*args, **kwargs)
