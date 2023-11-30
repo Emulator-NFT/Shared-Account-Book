@@ -13,7 +13,7 @@ class LedgerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ledger
         # exclude = ('user',)
-        fields = ('id', 'title', 'icon', 'date_created', 'description', 'entries')
+        fields = ('id', 'title', 'icon', 'date_created', 'description', 'year_budget', 'month_budget', 'entries')
 
 
 class EntrySerializer(serializers.ModelSerializer):

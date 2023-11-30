@@ -13,7 +13,9 @@ class Ledger(models.Model):
     icon = models.IntegerField(default=0, blank=True)
     date_created = models.DateTimeField(default=timezone.now, blank=True)
     description = models.CharField(max_length=100, blank=True, default='')  # 账本描述
-
+    year_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0)   # 年预算
+    month_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # 月预算
+    
     def __str__(self):
         return self.title
 
