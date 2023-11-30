@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
-from django.db.models import Q
+from django.db.models import Q, Func
 from .models import Ledger, Entry, Category, Budget
 from .serializers import LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer
 
@@ -33,12 +33,40 @@ class EntryViewSet(viewsets.ModelViewSet):
         entry_type = self.request.query_params.get('entry_type')
         if entry_type:
             self.queryset = self.queryset.filter(entry_type=entry_type)
+        # 指定分类
+        category = self.request.query_params.get('category')
+        if category:
+            self.queryset = self.queryset.filter(category=category)
+        # 指定时间范围, ISO 8601 格式, YYYY-MM-DD, 例如: 2023-11-28
+        date_from = self.request.query_params.get('date_from')
+        date_to = self.request.query_params.get('date_to')
+        date_to = date_to + ' 23:59:59' if date_to else None    # 日期范围包含当天
+        if date_from and date_to:
+            self.queryset = self.queryset.filter(date_created__range=(date_from, date_to))
+        elif date_from:
+            self.queryset = self.queryset.filter(date_created__gte=date_from)
+        elif date_to:
+            self.queryset = self.queryset.filter(date_created__lte=date_to)
+        # 指定金额范围
+        amount_from = self.request.query_params.get('amount_from')
+        amount_to = self.request.query_params.get('amount_to')
+        amount_from = float(amount_from) if amount_from else None
+        amount_to = float(amount_to) if amount_to else None
+        if amount_from and amount_to:
+            self.queryset = self.queryset.annotate(abs_amount=Func('amount', function='ABS')).filter(abs_amount__range=(abs(amount_from), abs(amount_to)))
+            # self.queryset = self.queryset.filter(amount__range=(abs(amount_from), abs(amount_to)))
+        elif amount_from:
+            self.queryset = self.queryset.annotate(abs_amount=Func('amount', function='ABS')).filter(abs_amount__gte=abs(amount_from))
+            # self.queryset = self.queryset.filter(amount__gte=abs(amount_from))
+        elif amount_to:
+            self.queryset = self.queryset.annotate(abs_amount=Func('amount', function='ABS')).filter(abs_amount__lte=abs(amount_to))
+            # self.queryset = self.queryset.filter(amount__lte=abs(amount_to))
         
         # 搜索, 查询标题或备注
         search = self.request.query_params.get('search')
         if search:
             self.queryset = self.queryset.filter(
-                Q(title__icontains=search) | 
+                Q(title__icontains=search) |
                 Q(notes__icontains=search)
             )
         
