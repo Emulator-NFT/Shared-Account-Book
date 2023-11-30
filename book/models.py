@@ -48,3 +48,19 @@ class Entry(models.Model):
 
     def __str__(self):
         return self.title
+
+# 预算
+class Budget(models.Model):
+    user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)
+    ledger = models.ForeignKey(to=Ledger, on_delete=models.CASCADE, default=1)
+    # member = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1, related_name='budgets')  # 成员预算
+    # 一级预算: 总预算，年预算，季度预算，月预算，周预算，日预算
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    year = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    quarter = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    month = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    week = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    day = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.ledger.title} - {self.total}"

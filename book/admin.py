@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ledger, Entry, Category
+from .models import Ledger, Entry, Category, Budget
 
 class LedgerAdmin(admin.ModelAdmin):
     # list_display = ('id', 'title', 'icon', 'date_created', 'description')
@@ -37,6 +37,13 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_per_page = 25
 
+class BudgetAdmin(admin.ModelAdmin):
+    list_display = ('id', 'ledger', 'total', 'year', 'quarter', 'month', 'week', 'day')
+    list_display_links = ('id', 'ledger')
+    search_fields = ('ledger',)
+    list_per_page = 25
+
 admin.site.register(Ledger, LedgerAdmin)
 admin.site.register(Entry, EntryAdmin)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(Budget, BudgetAdmin)

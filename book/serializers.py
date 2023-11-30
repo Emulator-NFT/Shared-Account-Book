@@ -1,7 +1,7 @@
 
 from rest_framework import serializers
 
-from .models import Ledger, Entry, Category
+from .models import Ledger, Entry, Category, Budget
 
 
 class LedgerSerializer(serializers.ModelSerializer):
@@ -31,3 +31,9 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         # fields = ('id', 'name', 'icon', 'category_type')
         exclude = ('user',)
+
+class BudgetSerializer(serializers.ModelSerializer):
+        
+        class Meta:
+            model = Budget
+            exclude = ('user',)
