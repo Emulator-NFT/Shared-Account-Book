@@ -11,6 +11,8 @@ from knox.auth import TokenAuthentication
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
 
+from .utils import create_default_categories
+
 # Create your views here.
 
 # 注册
@@ -20,7 +22,9 @@ class RegisterView(GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            # serializer.save()
+            user = serializer.save()
+            create_default_categories(user) # 初始化默认分类
             return response.Response(status=status.HTTP_201_CREATED)
         else:
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
