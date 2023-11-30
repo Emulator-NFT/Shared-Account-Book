@@ -44,7 +44,7 @@ class Entry(models.Model):
     title = models.CharField(max_length=20)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ledgers = models.ManyToManyField(to=Ledger, related_name='entries')
-    category = models.ForeignKey(to=Category, on_delete=models.SET_DEFAULT, default=1, blank=True)
+    category = models.ForeignKey(to=Category, on_delete=models.SET_NULL, null=True, blank=True)
     date_created = models.DateTimeField(default=timezone.now, blank=True)
     notes = models.CharField(max_length=100, blank=True, null=True)  # 备注
 
