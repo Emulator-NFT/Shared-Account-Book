@@ -62,12 +62,13 @@ class EntryViewSet(viewsets.ModelViewSet):
             self.queryset = self.queryset.annotate(abs_amount=Func('amount', function='ABS')).filter(abs_amount__lte=abs(amount_to))
             # self.queryset = self.queryset.filter(amount__lte=abs(amount_to))
         
-        # 搜索, 查询标题或备注
+        # 搜索, 查询标题、备注、或类型名称
         search = self.request.query_params.get('search')
         if search:
             self.queryset = self.queryset.filter(
                 Q(title__icontains=search) |
-                Q(notes__icontains=search)
+                Q(notes__icontains=search) |
+                Q(category__name__icontains=search)
             )
         
         # 排序参数, 默认按id排序
