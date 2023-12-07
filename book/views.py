@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
 from django.db.models import Q, Func
-from .models import Ledger, Entry, Category, Budget
-from .serializers import LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer
+from .models import Ledger, Entry, Category, Budget, EntryImage
+from .serializers import LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
 
 # Create your views here.
 
@@ -14,8 +14,21 @@ class LedgerViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+
+
+class EntryImageViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = EntryImage.objects.all()
+    serializer_class = EntryImageSerializer
     
-    
+    def get_queryset(self):
+        # self.queryset = self.queryset.filter(entry__user=self.request.user) # 只能查看自己的图片
+        entry = self.request.query_params.get('entry')
+        if entry:
+            self.queryset = self.queryset.filter(entry=entry)
+        return self.queryset
+
+
 class EntryViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Entry.objects.all()

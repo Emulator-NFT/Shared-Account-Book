@@ -33,6 +33,13 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+# 收支图片
+class EntryImage(models.Model):
+    entry = models.ForeignKey(to='Entry', on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='images/')  # 图片
+    def __str__(self):
+        return f"Image for {self.entry.title}"
+
 # 收支明细
 class Entry(models.Model):
     user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)
