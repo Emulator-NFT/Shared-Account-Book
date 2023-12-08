@@ -19,6 +19,22 @@ class Ledger(models.Model):
     def __str__(self):
         return self.title
 
+# 账本 - 成员 中间模型
+class LedgerMember(models.Model):
+    ledger = models.ForeignKey(to=Ledger, on_delete=models.CASCADE, related_name='members')
+    member = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, related_name='ledgers')
+
+    ROLE_CHOICES = (
+        ('owner', '账本主人'),
+        ('admin', '管理员'),
+        ('member', '普通成员'),
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='member') # 权限
+    nickname = models.CharField(max_length=20, blank=True)  # 昵称
+    
+    def __str__(self):
+        return f"{self.ledger.title} - {self.member.username}"
+
 # 收支类型
 class Category(models.Model):
     user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)

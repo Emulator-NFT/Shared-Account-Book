@@ -7,7 +7,8 @@ router = routers.DefaultRouter()
 router.register(r'ledgers', views.LedgerViewSet)
 router.register(r'entries', views.EntryViewSet)
 router.register(r'categories', views.CategoryViewSet)
-router.register(r'entry_images', views.EntryImageViewSet)
+router.register(r'entry-images', views.EntryImageViewSet)
+router.register(r'ledger-members', views.LedgerMemberViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

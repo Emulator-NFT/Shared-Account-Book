@@ -1,7 +1,7 @@
 
 from rest_framework import serializers
 
-from .models import EntryImage, Ledger, Entry, Category, Budget
+from .models import EntryImage, Ledger, Entry, Category, Budget, LedgerMember
 
 
 class LedgerSerializer(serializers.ModelSerializer):
@@ -14,6 +14,22 @@ class LedgerSerializer(serializers.ModelSerializer):
         model = Ledger
         # exclude = ('user',)
         fields = ('id', 'title', 'icon', 'date_created', 'description', 'year_budget', 'month_budget', 'entries')
+
+class LedgerMemberSerializer(serializers.ModelSerializer):
+        
+    class Meta:
+        model = LedgerMember
+        fields = ('id', 'ledger', 'member', 'role', 'nickname')
+    def create(self, validated_data):
+        ledger = validated_data['ledger']
+        member = validated_data['member']
+        role = validated_data['role']
+        nickname = validated_data['nickname']
+        # 检查当前用户是否已经是该账本的成员
+        if LedgerMember.objects.filter(ledger=ledger, member=member).exists():
+            raise serializers.ValidationError('Current user is already a member of this ledger')
+        ledger_member = LedgerMember.objects.create(ledger=ledger, member=member, role=role, nickname=nickname)
+        return ledger_member
 
 class EntryImageSerializer(serializers.ModelSerializer):
         

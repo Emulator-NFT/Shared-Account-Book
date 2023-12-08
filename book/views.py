@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
 from django.db.models import Q, Func
-from .models import Ledger, Entry, Category, Budget, EntryImage
-from .serializers import LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
+from .models import Ledger, LedgerMember, Entry, Category, Budget, EntryImage
+from .serializers import LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
 
 # Create your views here.
 
@@ -15,6 +15,22 @@ class LedgerViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
+class LedgerMemberViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = LedgerMember.objects.all()
+    serializer_class = LedgerMemberSerializer
+    
+    def get_queryset(self):
+        # 只返回当前用户参与的账本
+        user_ledgers = self.queryset.filter(member=self.request.user).values_list('ledger', flat=True)
+        self.queryset = self.queryset.filter(ledger__in=user_ledgers)
+
+        # 按照账本ID过滤
+        ledger = self.request.query_params.get('ledger')
+        if ledger:
+            self.queryset = self.queryset.filter(ledger=ledger)
+        
+        return self.queryset
 
 class EntryImageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
