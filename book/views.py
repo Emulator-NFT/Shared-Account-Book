@@ -1,8 +1,8 @@
 from django.shortcuts import render
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, response, status
 from django.db.models import Q, Func
 from .models import Ledger, LedgerMember, Entry, Category, Budget, EntryImage
-from .serializers import LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
+from .serializers import EntryDetailSerializer, LedgerDetailSerializer, LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
 
 # Create your views here.
 
@@ -11,9 +11,36 @@ class LedgerViewSet(viewsets.ModelViewSet):
     queryset = Ledger.objects.all()
     serializer_class = LedgerSerializer
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        ledger_instance =  serializer.save()
+        # 创建账本时，自动创建账本成员：主人和机器人
+        LedgerMember.objects.create(ledger=ledger_instance, 
+                                    member=self.request.user, 
+                                    role='owner', 
+                                    nickname=self.request.user.username)
+        # TODO: 创建机器人账本成员
+        # bot_user = MyUser.objects.create
+        # LedgerMember.objects.create(ledger=ledger_instance,
+        #                             member=self.request.user,
+        #                             role='bot',
+        #                             nickname='机器人')
+
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        self.queryset = self.queryset.filter(members__member=self.request.user)
+        # 按照账本类型过滤
+        ledger_type = self.request.query_params.get('ledger_type')
+        if ledger_type:
+            # 必须是 "personal", "family", "group" 之一
+            ledger_type = ledger_type if ledger_type in ('personal', 'family', 'group') else 'personal'
+            self.queryset = self.queryset.filter(ledger_type=ledger_type)
+        
+        return self.queryset
+    
+    def get_serializer_class(self):
+        # GET /api/ledgers/1/   返回详细信息
+        if self.action == 'retrieve':   
+            return LedgerDetailSerializer
+        return LedgerSerializer
+
 
 class LedgerMemberViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -31,6 +58,42 @@ class LedgerMemberViewSet(viewsets.ModelViewSet):
             self.queryset = self.queryset.filter(ledger=ledger)
         
         return self.queryset
+    
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return response.Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            return response.Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    # DELETE
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = self.request.user
+        user_member = LedgerMember.objects.get(ledger=instance.ledger, member=user)
+        # 如果user不在该账本中，不允许修改
+        if not user_member:
+            return response.Response({'detail': 'Current user is not a member of this ledger'}, status=status.HTTP_400_BAD_REQUEST)
+        # 任何人都可以删除自己，主人可以删除其他成员
+        if user == instance.member or user_member.role == 'owner':
+            # 如果主人把自己删除了，那么转移账本所有权给第一个成员(非机器人)
+            if user_member == instance:
+                new_owner = LedgerMember.objects.filter(ledger=instance.ledger, role__ne='bot').first()
+                if new_owner:
+                    new_owner.role = 'owner'
+                    new_owner.save()
+                else:
+                    # 如果没有其他成员，直接删除账本和机器人
+                    instance.ledger.delete()
+                    # TODO: 删除机器人
+            instance.delete()
+            return response.Response(status=status.HTTP_204_NO_CONTENT)
+        
+        return response.Response({'detail': 'You do not have permission to perform this action.'}, status=status.HTTP_403_FORBIDDEN)
 
 class EntryImageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -51,8 +114,15 @@ class EntryViewSet(viewsets.ModelViewSet):
     serializer_class = EntrySerializer
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def get_serializer_class(self):
+        # GET /api/entries/1/   返回详细信息
+        if self.action == 'retrieve':   
+            return EntryDetailSerializer
+        return EntrySerializer
+
     def get_queryset(self):
-        self.queryset = self.queryset.filter(user=self.request.user)
+        # self.queryset = self.queryset.filter(user=self.request.user)
         
         # 指定账本ID
         ledger = self.request.query_params.get('ledger')

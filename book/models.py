@@ -8,9 +8,17 @@ from users.models import MyUser
 
 # 账本
 class Ledger(models.Model):
-    user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE)    
+    # user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE)    
+    # 通过中间模型LedgerMember来关联用户和账本
     title = models.CharField(max_length=20)
     icon = models.IntegerField(default=0, blank=True)
+    # 账本类型
+    LEDGER_TYPE = (
+        ('personal', '个人账本'),
+        ('family', '家庭账本'),
+        ('group', '群组账本'),
+    )
+    ledger_type = models.CharField(max_length=10, choices=LEDGER_TYPE, default='personal')
     date_created = models.DateTimeField(default=timezone.now, blank=True)
     description = models.CharField(max_length=100, blank=True, default='')  # 账本描述
     year_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0)   # 年预算
@@ -25,12 +33,15 @@ class LedgerMember(models.Model):
     member = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, related_name='ledgers')
 
     ROLE_CHOICES = (
+        ('bot', '机器人'),
         ('owner', '账本主人'),
         ('admin', '管理员'),
         ('member', '普通成员'),
     )
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='member') # 权限
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='member') # 角色权限
     nickname = models.CharField(max_length=20, blank=True)  # 昵称
+    date_joined = models.DateTimeField(null=True, blank=True)  # 加入时间
+    budget = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True)  # 成员预算
     
     def __str__(self):
         return f"{self.ledger.title} - {self.member.username}"
@@ -58,7 +69,7 @@ class EntryImage(models.Model):
 
 # 收支明细
 class Entry(models.Model):
-    user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)
+    user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)    # 谁记的账
     ENTRY_TYPE = (
         ('income', '收入'),
         ('expense', '支出'),
