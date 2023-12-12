@@ -78,20 +78,33 @@ class LedgerMemberViewSet(viewsets.ModelViewSet):
         # 如果user不在该账本中，不允许修改
         if not user_member:
             return response.Response({'detail': 'Current user is not a member of this ledger'}, status=status.HTTP_400_BAD_REQUEST)
-        # 任何人都可以删除自己，主人可以删除其他成员
-        if user == instance.member or user_member.role == 'owner':
-            # 如果主人把自己删除了，那么转移账本所有权给第一个成员(非机器人)
-            if user_member == instance:
-                new_owner = LedgerMember.objects.filter(ledger=instance.ledger, role__ne='bot').first()
+        
+        # 如果请求用户是主人，可以删除任何人
+        if user_member.role == 'owner':
+            instance.delete()
+            if instance.role == 'owner':
+                # 如果删除的是主人，转移账本所有权给第一个成员(非机器人)
+                new_owner = LedgerMember.objects.filter(ledger=instance.ledger).exclude(role='bot').first()
                 if new_owner:
                     new_owner.role = 'owner'
                     new_owner.save()
                 else:
-                    # 如果没有其他成员，直接删除账本和机器人
-                    instance.ledger.delete()
-                    # TODO: 删除机器人
-            instance.delete()
+                    instance.ledger.delete() # 如果没有其他成员，直接删除账本
             return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+        # 如果请求用户是管理员，可以删除普通成员和自己
+        if user_member.role == 'admin':
+            if instance == user_member: # 删除自己
+                instance.delete()
+                return response.Response(status=status.HTTP_204_NO_CONTENT)
+            elif instance.role == 'member': # 删除普通成员
+                instance.delete()
+                return response.Response(status=status.HTTP_204_NO_CONTENT)
+        # 如果请求用户是普通成员，只能删除自己
+        if user_member.role == 'member':
+            if instance == user_member:
+                instance.delete()
+                return response.Response(status=status.HTTP_204_NO_CONTENT)
         
         return response.Response({'detail': 'You do not have permission to perform this action.'}, status=status.HTTP_403_FORBIDDEN)
 

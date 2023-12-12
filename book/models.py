@@ -40,7 +40,7 @@ class LedgerMember(models.Model):
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='member') # 角色权限
     nickname = models.CharField(max_length=20, blank=True)  # 昵称
-    date_joined = models.DateTimeField(null=True, blank=True)  # 加入时间
+    date_joined = models.DateTimeField(default=timezone.now, blank=True)  # 加入时间
     budget = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True)  # 成员预算
     
     def __str__(self):
