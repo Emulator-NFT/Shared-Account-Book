@@ -11,8 +11,8 @@ class MyUserManager(BaseUserManager):
         if not username:
             raise ValueError('The given username must be set')
 
-        if not email:
-            raise ValueError('The given email must be set')
+        # if not email:
+        #     raise ValueError('The given email must be set')
         
         user: MyUser = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
@@ -28,11 +28,24 @@ class MyUserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_staff', True)
         return self._create_user(username, email, password, **extra_fields)
+    
+    # 通过openid创建用户, 自动生成账号密码
+    def create_user_with_openid(self, openid):
+        # 自动生成用户名
+        username = str(uuid.uuid4())[:15]
+        while self.filter(username=username).exists():
+            username = str(uuid.uuid4())[:15]
+        # password = str(uuid.uuid4())[:20]
+        user: MyUser = self.model(openid=openid, username=username, email=None)
+        user.save(using=self._db)
+        return user
+
 
 
 
 class MyUser(AbstractBaseUser, PermissionsMixin):
 
+    openid = models.CharField(max_length=255, null=True, blank = True) # 微信openid
     username_validator = RegexValidator(regex=r'^[a-zA-Z0-9_]+$', message='用户名只能包含字母、数字和下划线')
     username = models.CharField(max_length=20, unique=True, validators=[username_validator])
     email = models.EmailField(null=True, blank=True, unique=True)
@@ -48,7 +61,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'username'
     EMAIL_FIELD = 'email'
-    REQUIRED_FIELDS = ['email']
+    # REQUIRED_FIELDS = ['email']
 
     def __str__(self):
         return self.username

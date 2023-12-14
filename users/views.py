@@ -2,6 +2,7 @@
 
 from django.http import HttpResponse
 from django.shortcuts import render
+import requests
 from rest_framework import response, status, permissions
 from rest_framework.generics import GenericAPIView
 
@@ -12,6 +13,7 @@ from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
 
 from .utils import create_default_categories
+from acount_book import settings
 
 # Create your views here.
 
@@ -79,4 +81,36 @@ class UserProfileView(GenericAPIView):
             return response.Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# 微信登录, 自动注册
+class WxLoginView(GenericAPIView):
+    authentication_classes = [] # 不需要认证
+
+    def post(self, request):
+        code = request.data.get('code')
+        if code is None:
+            return response.Response({'msg': 'code不能为空'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 调用微信接口获取登录信息
+        # https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html
+        url = settings.Code2Session_URL.format(settings.WX_APP_ID, settings.WX_APP_SECRET, code)
+        r = requests.get(url)   # 返回JSON数据
+        res = r.json()
+        if 'errcode' in res:
+            return response.Response({'msg': 'code无效'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        # 根据openid查询用户
+        user = MyUser.objects.filter(openid=res['openid']).first()
+        if user is None:
+            # 如果用户不存在，则创建用户
+            user = MyUser.objects.create_user_with_openid(res['openid'])
+            create_default_categories(user)
+
+        # 生成token
+        token = AuthToken.objects.create(user)[1]
+        return response.Response({'uid': user.id,
+                                  'username': user.username,
+                                  'token': token}, 
+                                 status=status.HTTP_200_OK)
     

@@ -30,6 +30,11 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'users.MyUser'
 
+#微信小程序的appid和secret
+WX_APP_ID = 'wx71b7ac449295b290'
+WX_APP_SECRET = '1a27ed80950ce3c3c8ac7c062088181f'
+Code2Session_URL = 'https://api.weixin.qq.com/sns/jscode2session?appid={}&secret={}&js_code={}&grant_type=authorization_code'
+
 # Application definition
 
 INSTALLED_APPS = [
