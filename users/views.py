@@ -81,6 +81,16 @@ class UserProfileView(GenericAPIView):
             return response.Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # 只用于修改头像
+    def post(self, request):
+        user = request.user
+        serializer = UserAvatarSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 微信登录, 自动注册
 class WxLoginView(GenericAPIView):

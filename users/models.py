@@ -48,6 +48,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     openid = models.CharField(max_length=255, null=True, blank = True) # 微信openid
     username_validator = RegexValidator(regex=r'^[a-zA-Z0-9_]+$', message='用户名只能包含字母、数字和下划线')
     username = models.CharField(max_length=20, unique=True, validators=[username_validator])
+    nickname = models.CharField(max_length=20, null=True, blank=True)
     email = models.EmailField(null=True, blank=True, unique=True)
     phone_validator = RegexValidator(regex=r'^[0-9]{11}$', message='手机号码格式错误')
     phone = models.CharField(max_length=11, null=True, blank=True, validators=[phone_validator])

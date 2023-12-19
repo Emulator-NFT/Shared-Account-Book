@@ -32,20 +32,19 @@ class LoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
-        fields = ['username', 'email', 'phone', 'avatar']
+        fields = ['id', 'openid', 'username', 'nickname', 'avatar', 'date_joined']
         extra_kwargs = {
+            'openid': {'read_only': True},
             'username': {'read_only': True},
-            'email': {'read_only': True}
+            'avatar': {'read_only': True}, # 不能在此修改头像，只能通过专门的接口修改
+            'date_joined': {'read_only': True},
         }
-    
-    def update(self, instance, validated_data):
-        instance.phone = validated_data.get('phone', instance.phone)
-        # instance.avatar = validated_data.get('avatar', instance.avatar)
-        new_avatar = validated_data.get('avatar', None)
-        if new_avatar is not None:
-            instance.avatar.delete(save=False)
-            file_extension = new_avatar.name.split('.')[-1]
-            new_avatar.name = str(uuid.uuid4()) + '.' + file_extension
-            instance.avatar = new_avatar
-        instance.save()
-        return instance
+
+# 用户头像
+class UserAvatarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUser
+        fields = ['avatar']
+        extra_kwargs = {
+            'avatar': {'write_only': True}
+        }
