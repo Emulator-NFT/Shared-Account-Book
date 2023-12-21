@@ -9,7 +9,7 @@ class MyUserAdmin(UserAdmin):
     search_fields = ['username', 'openid']
     list_display_links = ['id', 'username']
     fieldsets = [
-        ('基本信息', {'fields': ['openid', 'username', 'email', 'phone', 'avatar', 'date_joined']}),
+        ('基本信息', {'fields': ['openid', 'username', 'email', 'phone', 'avatar', 'date_joined', 'nickname']}),
         ('权限', {'fields': ['is_staff', 'is_active']})
     ]
 

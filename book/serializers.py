@@ -21,7 +21,7 @@ class LedgerMemberSerializer(serializers.ModelSerializer):
         # 检查当前用户是否已经是该账本的成员
         if LedgerMember.objects.filter(ledger=ledger, member=member).exists():
             raise serializers.ValidationError('Current user is already a member of this ledger')
-        ledger_member = LedgerMember.objects.create(ledger=ledger, member=member, nickname=member.username)
+        ledger_member = LedgerMember.objects.create(ledger=ledger, member=member, nickname=member.nickname)
         return ledger_member
     
     def update(self, instance, validated_data):
