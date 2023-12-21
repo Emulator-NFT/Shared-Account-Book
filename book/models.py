@@ -83,6 +83,14 @@ class Entry(models.Model):
     date_created = models.DateTimeField(default=timezone.now, blank=True)
     notes = models.CharField(max_length=100, blank=True, null=True)  # 备注
 
+    STATUS_CHOICES = (
+        ('unreviewed', '未审核'),
+        ('approved', '审核通过'),
+        ('rejected', '审核不通过'),
+    )
+    review_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='unreviewed')  # 审核状态
+    review_notes = models.CharField(max_length=100, blank=True, null=True)  # 审核备注（为什么不通过）
+
     def __str__(self):
         return self.title
 

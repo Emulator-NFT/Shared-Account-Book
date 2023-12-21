@@ -84,7 +84,7 @@ class EntrySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Entry
-        exclude = ('notes',)
+        exclude = ('notes', 'review_notes')
 
 # @Retrieve
 class EntryDetailSerializer(serializers.ModelSerializer):

@@ -12,4 +12,6 @@ router.register(r'ledger-members', views.LedgerMemberViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('entries/<int:pk>/review/', views.EntryViewSet.as_view({'patch': 'review'})),
+    path('entries/<int:pk>/subreview/', views.EntryViewSet.as_view({'patch': 'subreview'})),
 ]

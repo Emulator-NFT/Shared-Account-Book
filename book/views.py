@@ -149,6 +149,18 @@ class EntryViewSet(viewsets.ModelViewSet):
         ledger = self.request.query_params.get('ledger')
         if ledger:
             self.queryset = self.queryset.filter(ledgers__id=ledger)
+            
+            ledger_member = LedgerMember.objects.filter(ledger=ledger, member=self.request.user).first()
+            ledger_instance = Ledger.objects.filter(id=ledger).first()
+            # 对于群组账本，需要根据审核状态过滤
+            if ledger_member and ledger_instance.ledger_type == 'group':
+                if ledger_member.role == 'member':
+                    # 普通成员只能看到审核通过的 或者 自己的
+                    self.queryset = self.queryset.filter(
+                        Q(review_status='approved') |
+                        Q(user=self.request.user)
+                    )
+
         # 指定收支类型
         entry_type = self.request.query_params.get('entry_type')
         if entry_type:
@@ -199,6 +211,36 @@ class EntryViewSet(viewsets.ModelViewSet):
             self.queryset = self.queryset.extra(select={'abs_amount': 'ABS(amount)'}).order_by('abs_amount' if ordering == 'amount' else '-abs_amount')
         return self.queryset
 
+    # PATCH /api/entries/1/review/  审核收支
+    def review(self, request, *args, **kwargs):
+        instance = self.get_object()    # Entry Instance
+        ledger_instance = instance.ledgers.filter(ledger_type='group').first() # Ledger Instance
+        user = self.request.user
+        user_member = LedgerMember.objects.get(ledger=ledger_instance, member=user)
+        # 只有主人和管理员可以审核
+        if not user_member or user_member.role not in ('owner', 'admin'):
+            return response.Response({'detail': 'Only owner and admin can review entries'}, status=status.HTTP_403_FORBIDDEN)
+        instance.review_status = request.data.get('review_status', instance.review_status)
+        instance.review_notes = request.data.get('review_notes', instance.review_notes)
+        instance.save()
+        return response.Response(status=status.HTTP_204_NO_CONTENT)
+    
+    # PATCH /api/entries/1/subreview/  将收支设置为待审核, 用于管理员审核不通过后，让用户重新提交
+    def subreview(self, request, *args, **kwargs):
+        instance = self.get_object()    # Entry Instance
+        ledger_instance = instance.ledgers.filter(ledger_type='group').first()
+        user = self.request.user
+        if user != instance.user:
+            return response.Response({'detail': 'You are not the creator of this entry'}, status=status.HTTP_403_FORBIDDEN)
+        user_member = LedgerMember.objects.get(ledger=ledger_instance, member=user)
+        if not user_member:
+            return response.Response({'detail': 'You are not a member of the group ledger'}, status=status.HTTP_403_FORBIDDEN)
+        instance.review_status = 'unreviewed'
+        instance.review_notes = None
+        instance.save()
+        return response.Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
 
 class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
