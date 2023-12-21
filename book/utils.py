@@ -1,6 +1,6 @@
-from book.models import Category
+from .models import Category
 
-def create_default_categories(user):
+def create_default_categories(ledger):
     default_categories = [
         {'name': '工资', 'icon': 1, 'category_type': 'income'},
         {'name': '奖金', 'icon': 2, 'category_type': 'income'},
@@ -26,4 +26,4 @@ def create_default_categories(user):
         {'name': '转账', 'icon': 22, 'category_type': 'expense'},
     ]
     for category in default_categories:
-        Category.objects.create(user=user, **category)
+        Category.objects.create(ledger=ledger, **category)

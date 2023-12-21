@@ -99,7 +99,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         # fields = ('id', 'name', 'icon', 'category_type')
-        exclude = ('user',)
+        fields = '__all__'
 
 class BudgetSerializer(serializers.ModelSerializer):
         

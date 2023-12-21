@@ -6,6 +6,15 @@ class LedgerMemberInline(admin.TabularInline):
     model = LedgerMember
     extra = 1
 
+class CategoryInline(admin.TabularInline):
+    model = Category
+    extra = 1
+    readonly_fields = ('display_id',)
+
+    def display_id(self, obj):
+        return obj.pk
+    display_id.short_description = 'ID'
+
 class LedgerAdmin(admin.ModelAdmin):
     # list_display = ('id', 'title', 'icon', 'date_created', 'description')
     list_display = ('id', 'title', 'icon', 'date_created', 'description', 'display_entries_id')
@@ -14,7 +23,7 @@ class LedgerAdmin(admin.ModelAdmin):
     list_per_page = 25
     
     readonly_fields = ('display_id', 'display_entries') # 不能直接通过fields指定display_id
-    inlines = [LedgerMemberInline] # 在Ledger的管理页面上，直接添加、编辑或删除与该Ledger关联的LedgerMember对象
+    inlines = [LedgerMemberInline, CategoryInline] # 在Ledger的管理页面上，直接添加、编辑或删除与该Ledger关联的LedgerMember对象
     # 显示账本ID
     def display_id(self, obj):
         return obj.pk
@@ -40,11 +49,11 @@ class EntryAdmin(admin.ModelAdmin):
     list_per_page = 25
     inlines = [EntryImageInline] # 在Entry的管理页面上，直接添加、编辑或删除与该Entry关联的EntryImage对象。
 
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'icon', 'category_type')
-    list_display_links = ('id', 'name')
-    search_fields = ('name',)
-    list_per_page = 25
+# class CategoryAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'ledger', 'name', 'icon', 'category_type')
+#     list_display_links = ('id', 'name')
+#     search_fields = ('name',)
+#     list_per_page = 25
 
 class BudgetAdmin(admin.ModelAdmin):
     list_display = ('id', 'ledger', 'total', 'year', 'quarter', 'month', 'week', 'day')
@@ -54,5 +63,5 @@ class BudgetAdmin(admin.ModelAdmin):
 
 admin.site.register(Ledger, LedgerAdmin)
 admin.site.register(Entry, EntryAdmin)
-admin.site.register(Category, CategoryAdmin)
+# admin.site.register(Category, CategoryAdmin)
 admin.site.register(Budget, BudgetAdmin)

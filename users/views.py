@@ -12,7 +12,6 @@ from knox.auth import TokenAuthentication
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
 
-from .utils import create_default_categories
 from acount_book import settings
 
 # Create your views here.
@@ -26,7 +25,6 @@ class RegisterView(GenericAPIView):
         if serializer.is_valid():
             # serializer.save()
             user = serializer.save()
-            create_default_categories(user) # 初始化默认分类
             return response.Response(status=status.HTTP_201_CREATED)
         else:
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -115,7 +113,6 @@ class WxLoginView(GenericAPIView):
         if user is None:
             # 如果用户不存在，则创建用户
             user = MyUser.objects.create_user_with_openid(res['openid'])
-            create_default_categories(user)
 
         # 生成token
         token = AuthToken.objects.create(user)[1]

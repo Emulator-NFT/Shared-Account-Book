@@ -48,7 +48,8 @@ class LedgerMember(models.Model):
 
 # 收支类型
 class Category(models.Model):
-    user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)
+    # user = models.ForeignKey(to=MyUser, on_delete=models.CASCADE, default=1)
+    ledger = models.ForeignKey(to=Ledger, on_delete=models.CASCADE, null=True, blank=False)
     CATEGORY_TYPE = (
         ('income', '收入'),
         ('expense', '支出'),

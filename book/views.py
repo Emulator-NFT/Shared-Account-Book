@@ -3,7 +3,7 @@ from rest_framework import viewsets, permissions, response, status
 from django.db.models import Q, Func
 from .models import Ledger, LedgerMember, Entry, Category, Budget, EntryImage
 from .serializers import EntryDetailSerializer, LedgerDetailSerializer, LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
-
+from .utils import create_default_categories
 # Create your views here.
 
 class LedgerViewSet(viewsets.ModelViewSet):
@@ -23,6 +23,8 @@ class LedgerViewSet(viewsets.ModelViewSet):
         #                             member=self.request.user,
         #                             role='bot',
         #                             nickname='机器人')
+        # 创建账本时，自动创建默认分类
+        create_default_categories(ledger_instance)
 
     def get_queryset(self):
         self.queryset = self.queryset.filter(members__member=self.request.user)
@@ -196,11 +198,13 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    # def perform_create(self, serializer):
+    #     serializer.save(user=self.request.user)
     def get_queryset(self):
-        self.queryset = self.queryset.filter(user=self.request.user)
-
+        # self.queryset = self.queryset.filter(user=self.request.user)
+        ledger = self.request.query_params.get('ledger')
+        if ledger:
+            self.queryset = self.queryset.filter(ledger=ledger)
         category_type = self.request.query_params.get('category_type')
         if category_type:
             self.queryset = self.queryset.filter(category_type=category_type)
