@@ -4,6 +4,7 @@ from django.db.models import Q, Func
 from .models import Ledger, LedgerMember, Entry, Category, Budget, EntryImage
 from .serializers import EntryDetailSerializer, LedgerDetailSerializer, LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
 from .utils import create_default_categories
+from users.models import MyUser
 # Create your views here.
 
 class LedgerViewSet(viewsets.ModelViewSet):
@@ -17,12 +18,12 @@ class LedgerViewSet(viewsets.ModelViewSet):
                                     member=self.request.user, 
                                     role='owner', 
                                     nickname=self.request.user.username)
-        # TODO: 创建机器人账本成员
-        # bot_user = MyUser.objects.create
-        # LedgerMember.objects.create(ledger=ledger_instance,
-        #                             member=self.request.user,
-        #                             role='bot',
-        #                             nickname='机器人')
+        bot_user = MyUser.objects.create_user_auto()
+        LedgerMember.objects.create(ledger=ledger_instance, 
+                                    member=bot_user, 
+                                    role='bot', 
+                                    nickname='机器人')
+
         # 创建账本时，自动创建默认分类
         create_default_categories(ledger_instance)
 
@@ -62,6 +63,11 @@ class LedgerMemberViewSet(viewsets.ModelViewSet):
         return self.queryset
     
     def create(self, request, *args, **kwargs):
+        member_username = request.data.get('member')
+        member_user = MyUser.objects.filter(username=member_username).first()
+        if not member_user:
+            return response.Response({'detail': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+        request.data['member'] = member_user.id
         try:
             return super().create(request, *args, **kwargs)
         except Exception as e:

@@ -39,7 +39,15 @@ class MyUserManager(BaseUserManager):
         user: MyUser = self.model(openid=openid, username=username, email=None)
         user.save(using=self._db)
         return user
-
+    
+    # 自动生成用户，用于账本成员机器人
+    def create_user_auto(self):
+        username = str(uuid.uuid4())[:15]
+        while self.filter(username=username).exists():
+            username = str(uuid.uuid4())[:15]
+        user: MyUser = self.model(username=username, email=None)
+        user.save(using=self._db)
+        return user
 
 
 
