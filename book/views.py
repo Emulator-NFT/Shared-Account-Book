@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, response, status
-from django.db.models import Q, Func
+from django.db.models import Q, Func, Sum, Count
 from .models import Ledger, LedgerMember, Entry, Category, Budget, EntryImage
 from .serializers import EntryDetailSerializer, LedgerDetailSerializer, LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
 from .utils import create_default_categories
 from users.models import MyUser
+from django.utils import timezone
 # Create your views here.
 
 class LedgerViewSet(viewsets.ModelViewSet):
@@ -43,6 +44,76 @@ class LedgerViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':   
             return LedgerDetailSerializer
         return LedgerSerializer
+    
+    # GET /api/ledgers/1/analysis/  返回账本分析数据
+    def analysis(self, request, *args, **kwargs):
+        instance = self.get_object()
+        entries = instance.entries.all()
+        year = request.query_params.get('year', timezone.now().year)
+        month = request.query_params.get('month', None)
+        entry_type = request.query_params.get('entry_type', 'expense')
+        entries = entries.filter(entry_type=entry_type)
+
+        # -------按月对比, 月度分析-前6个月, 年度分析-12个月----
+        date_range = []
+        monthly = []
+        if month:
+            date_range = [timezone.datetime(int(year), int(month), 1) - timezone.timedelta(days=i * 30) for i in range(6)]
+        else:
+            date_range = [timezone.datetime(int(year), 12, 1) - timezone.timedelta(days=i * 30) for i in range(12)]
+        date_range = sorted(date_range)
+        for date in date_range:
+            month_amount = entries.filter(date_created__year=date.year,
+                                        date_created__month=date.month).aggregate(total=Sum('amount'))['total'] or 0
+            monthly.append({
+                'year': date.year,
+                'month': date.month,
+                'total': month_amount
+            })
+
+        # ------月/年 收支-------
+        if month:
+            entries = entries.filter(date_created__year=year, date_created__month=month)
+        else:
+            entries = entries.filter(date_created__year=year)
+
+        total = entries.aggregate(total=Sum('amount'))['total'] or 0    # 总支出
+        count = entries.count()                                         # 总笔数
+
+        # ------按类别统计收支总额和笔数------
+        category_amount = entries.values('category').annotate(
+            total=Sum('amount'),
+            count=Count('id'),
+            name = Func('category__name', function='upper'),
+            icon = Func('category__icon', function='ABS'),
+        )
+        category_amount = sorted(category_amount, key=lambda x: abs(x['total']), reverse=True)
+        category_amount = sorted(category_amount, key=lambda x: x['category'] is None)
+
+        category_amount = [dict(x) for x in category_amount]
+        for x in category_amount:
+            if x['category'] is None:
+                x['name'] = '其他'
+                x['icon'] = 0
+            del x['category']
+        
+        # 分类数量超过3个时，只显示前3个，其他合并为一个
+        if len(category_amount) > 3:
+            other = {
+                'total': sum([x['total'] for x in category_amount[3:]]),
+                'count': sum([x['count'] for x in category_amount[3:]]),
+                'name': '其他',
+                'icon': 0,
+            }
+            category_amount = category_amount[:3]
+            category_amount.append(other)
+
+        return response.Response({
+            'total': total,
+            'count': count,
+            'category_amount': category_amount,
+            'monthly': monthly
+        }, status=status.HTTP_200_OK)
 
 
 class LedgerMemberViewSet(viewsets.ModelViewSet):

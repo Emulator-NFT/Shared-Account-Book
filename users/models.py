@@ -36,7 +36,7 @@ class MyUserManager(BaseUserManager):
         while self.filter(username=username).exists():
             username = str(uuid.uuid4())[:15]
         # password = str(uuid.uuid4())[:20]
-        user: MyUser = self.model(openid=openid, username=username, email=None)
+        user: MyUser = self.model(openid=openid, username=username, email=None, nickname=username)
         user.save(using=self._db)
         return user
     

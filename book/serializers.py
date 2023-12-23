@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-
+from datetime import datetime
 from .models import EntryImage, Ledger, Entry, Category, Budget, LedgerMember
 
 class LedgerMemberSerializer(serializers.ModelSerializer):
@@ -68,10 +68,27 @@ class LedgerDetailSerializer(serializers.ModelSerializer):
         entries = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
         members = serializers.PrimaryKeyRelatedField(many=True, read_only=True)   # 只返回id
         # members = LedgerMemberSerializer(many=True, read_only=True) # 返回关联的LedgerMember对象的详细信息
-    
+        
+        # 返回已用预算
+        used_year_budget = serializers.SerializerMethodField()
+        used_month_budget = serializers.SerializerMethodField()
+
+        def get_used_year_budget(self, obj):
+            current_year = datetime.now().year
+            entries = obj.entries.filter(date_created__year=current_year)
+            entries = entries.filter(entry_type='expense')
+            return abs(sum([entry.amount for entry in entries]))
+        
+        def get_used_month_budget(self, obj):
+            current_month = datetime.now().month
+            entries = obj.entries.filter(date_created__month=current_month)
+            entries = entries.filter(entry_type='expense')
+            return abs(sum([entry.amount for entry in entries]))
+        
         class Meta:
             model = Ledger
             fields = '__all__'
+            
 
 class EntryImageSerializer(serializers.ModelSerializer):
         
