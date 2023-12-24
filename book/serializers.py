@@ -98,21 +98,16 @@ class EntryImageSerializer(serializers.ModelSerializer):
         model = EntryImage
         fields = ('id', 'entry', 'image')
 
-    image = serializers.SerializerMethodField()
-    def get_image(self, obj):
+    # 部署到服务器上时，需要将image的url前缀替换为远程服务器的url
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
         base_url = self.context['request'].build_absolute_uri('/')[:-1]
         base_url = base_url.replace(CONTAINER_BASE_URL, REMOTE_BASE_URL)
-        if obj.image:
-            return base_url + obj.image.url
+        if instance.image:
+            ret['image'] = base_url + instance.image.url
         else:
-            return None
-
-# 上面的序列化器因为重新定义了image字段，导致只能用于GET请求，不能用于POST请求
-class EntryImageCreateSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model = EntryImage
-        fields = ('id', 'entry', 'image')
+            ret['image'] = None
+        return ret
 
 # @List
 class EntrySerializer(serializers.ModelSerializer):
