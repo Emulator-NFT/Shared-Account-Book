@@ -268,6 +268,15 @@ class EntryViewSet(viewsets.ModelViewSet):
         elif amount_to:
             self.queryset = self.queryset.annotate(abs_amount=Func('amount', function='ABS')).filter(abs_amount__lte=abs(amount_to))
             # self.queryset = self.queryset.filter(amount__lte=abs(amount_to))
+            
+        # 指定成员
+        member = self.request.query_params.get('member')
+        if member:
+            self.queryset = self.queryset.filter(user=member)
+        # 指定审核状态
+        review_status = self.request.query_params.get('review_status')
+        if review_status:
+            self.queryset = self.queryset.filter(review_status=review_status)
         
         # 搜索, 查询标题、备注、或类型名称
         search = self.request.query_params.get('search')
