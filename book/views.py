@@ -19,11 +19,11 @@ class LedgerViewSet(viewsets.ModelViewSet):
                                     member=self.request.user, 
                                     role='owner', 
                                     nickname=self.request.user.username)
-        bot_user = MyUser.objects.create_user_auto()
-        LedgerMember.objects.create(ledger=ledger_instance, 
-                                    member=bot_user, 
-                                    role='bot', 
-                                    nickname='机器人')
+        # bot_user = MyUser.objects.create_user_auto()
+        # LedgerMember.objects.create(ledger=ledger_instance, 
+        #                             member=bot_user, 
+        #                             role='bot', 
+        #                             nickname='机器人')
 
         # 创建账本时，自动创建默认分类
         create_default_categories(ledger_instance)

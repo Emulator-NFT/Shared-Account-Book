@@ -6,7 +6,32 @@ from acount_book.settings import CONTAINER_BASE_URL, REMOTE_BASE_URL
 from .models import EntryImage, Ledger, Entry, Category, Budget, LedgerMember
 
 class LedgerMemberSerializer(serializers.ModelSerializer):
+    
+    avatar = serializers.SerializerMethodField()
+
+    used_year_budget = serializers.SerializerMethodField()
+    used_month_budget = serializers.SerializerMethodField()
+
+    def get_avatar(self, obj):
+        base_url = self.context['request'].build_absolute_uri('/')[:-1]
+        base_url = base_url.replace(CONTAINER_BASE_URL, REMOTE_BASE_URL)
+        if obj.member.avatar:
+            return base_url + obj.member.avatar.url
+        else:
+            return None
         
+    def get_used_year_budget(self, obj):
+        current_year = datetime.now().year
+        entries = obj.ledger.entries.filter(date_created__year=current_year)
+        entries = entries.filter(entry_type='expense')
+        return abs(sum([entry.amount for entry in entries]))
+    
+    def get_used_month_budget(self, obj):
+        current_month = datetime.now().month
+        entries = obj.ledger.entries.filter(date_created__month=current_month)
+        entries = entries.filter(entry_type='expense')
+        return abs(sum([entry.amount for entry in entries]))
+
     class Meta:
         model = LedgerMember
         fields = '__all__'
@@ -48,9 +73,10 @@ class LedgerMemberSerializer(serializers.ModelSerializer):
                 old_owner.role = 'admin'
                 old_owner.save()
 
-        # 群主和管理员可以修改成员的budget和nickname
+        # 群主和管理员可以修改成员的budget
         if user_member.role in ('owner', 'admin'):
-            instance.budget = validated_data.get('budget', instance.budget)
+            instance.year_budget = validated_data.get('year_budget', instance.year_budget)
+            instance.month_budget = validated_data.get('month_budget', instance.month_budget)
             instance.save()
 
         return instance

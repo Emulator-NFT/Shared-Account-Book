@@ -41,8 +41,8 @@ class LedgerMember(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='member') # 角色权限
     nickname = models.CharField(max_length=20, blank=True, null=True)  # 昵称
     date_joined = models.DateTimeField(default=timezone.now, blank=True)  # 加入时间
-    budget = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True)  # 成员预算
-    
+    year_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True)  # 成员预算 - 年预算
+    month_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True)  # 成员预算 - 月预算
     def __str__(self):
         return f"{self.ledger.title} - {self.member.username}"
 
