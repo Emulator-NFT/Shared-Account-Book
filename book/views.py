@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions, response, status
 from django.db.models import Q, Func, Sum, Count
 from .models import Ledger, LedgerMember, Entry, Category, Budget, EntryImage
-from .serializers import EntryDetailSerializer, LedgerDetailSerializer, LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
+from .serializers import EntryDetailSerializer, EntryImageCreateSerializer, LedgerDetailSerializer, LedgerMemberSerializer, LedgerSerializer, EntrySerializer, CategorySerializer, BudgetSerializer, EntryImageSerializer
 from .utils import create_default_categories
 from users.models import MyUser
 from django.utils import timezone
@@ -198,6 +198,10 @@ class EntryImageViewSet(viewsets.ModelViewSet):
         if entry:
             self.queryset = self.queryset.filter(entry=entry)
         return self.queryset
+    def get_serializer_class(self):
+        if self.action == 'create' or self.action == 'update':
+            return EntryImageCreateSerializer
+        return EntryImageSerializer
 
 
 class EntryViewSet(viewsets.ModelViewSet):

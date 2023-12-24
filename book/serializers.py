@@ -107,6 +107,13 @@ class EntryImageSerializer(serializers.ModelSerializer):
         else:
             return None
 
+# 上面的序列化器因为重新定义了image字段，导致只能用于GET请求，不能用于POST请求
+class EntryImageCreateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = EntryImage
+        fields = ('id', 'entry', 'image')
+
 # @List
 class EntrySerializer(serializers.ModelSerializer):
     
