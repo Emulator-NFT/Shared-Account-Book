@@ -18,7 +18,7 @@ class LedgerViewSet(viewsets.ModelViewSet):
         LedgerMember.objects.create(ledger=ledger_instance, 
                                     member=self.request.user, 
                                     role='owner', 
-                                    nickname=self.request.user.username)
+                                    nickname=self.request.user.nickname)
         # bot_user = MyUser.objects.create_user_auto()
         # LedgerMember.objects.create(ledger=ledger_instance, 
         #                             member=bot_user, 
