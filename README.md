@@ -13,6 +13,11 @@ $ python manage.py runserver
 ```
 如果migrate出现错误，则先删除`db.splite3`
 
+## 部署
+```bash
+$ docker-compose up
+```
+
 ## TODO:
 
 - [ ] 添加收支时，增加选项将收支归入机器人门下

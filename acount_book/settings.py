@@ -26,7 +26,8 @@ SECRET_KEY = 'django-insecure-%6=-_z+7j45o8@0ey)0^2&_6huo52h+s%#@+6qo*2c039@9#(x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# 部署需要设置, 默认[]只允许本机访问
+ALLOWED_HOSTS = ["*"]
 
 AUTH_USER_MODEL = 'users.MyUser'
 
@@ -142,6 +143,10 @@ STATIC_URL = 'static/'
 # Media files (user uploaded files)
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# 部署环境设置返回图片的URL
+CONTAINER_BASE_URL = 'http://app:8000'  # app: 容器HOST
+REMOTE_BASE_URL = 'http://43.140.204.155:8000' # 服务器IP
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

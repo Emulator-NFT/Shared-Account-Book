@@ -1,0 +1,56 @@
+version: '3'
+services:
+  app:
+    restart: always
+    build: .
+    container_name: app
+    command: >
+      bash -c
+      "python manage.py migrate --settings=acount_book.settings_prod &&
+      python manage.py inspectdb &&
+      DJANGO_SETTINGS_MODULE=acount_book.settings_prod gunicorn -w4 -b 0.0.0.0:8000 --log-level=debug acount_book.wsgi"
+    volumes:
+      - .:/code
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    networks:
+      - web_network
+      - db_network
+  
+  db:
+    restart: always
+    image: mysql:8.1
+    container_name: mysql
+    volumes:
+      - /home/ubuntu/mysql/:/var/lib/mysql
+    expose:
+      - "3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=2020010548
+      - MYSQL_DATABASE=thss
+      - TZ=Asia/Shanghai
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    networks:
+      - db_network
+  
+  nginx:
+    restart: always
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/opt/temp/
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - web_network
+
+networks:
+  web_network:
+    driver: bridge
+  db_network:
+    driver: bridge
