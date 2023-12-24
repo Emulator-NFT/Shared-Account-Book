@@ -1,6 +1,8 @@
 
 from rest_framework import serializers
 from datetime import datetime
+
+from acount_book.settings import CONTAINER_BASE_URL, REMOTE_BASE_URL
 from .models import EntryImage, Ledger, Entry, Category, Budget, LedgerMember
 
 class LedgerMemberSerializer(serializers.ModelSerializer):
@@ -92,9 +94,18 @@ class LedgerDetailSerializer(serializers.ModelSerializer):
 
 class EntryImageSerializer(serializers.ModelSerializer):
         
-        class Meta:
-            model = EntryImage
-            fields = ('id', 'entry', 'image')
+    class Meta:
+        model = EntryImage
+        fields = ('id', 'entry', 'image')
+
+    image = serializers.SerializerMethodField()
+    def get_image(self, obj):
+        base_url = self.context['request'].build_absolute_uri('/')[:-1]
+        base_url = base_url.replace(CONTAINER_BASE_URL, REMOTE_BASE_URL)
+        if obj.image:
+            return base_url + obj.image.url
+        else:
+            return None
 
 # @List
 class EntrySerializer(serializers.ModelSerializer):
