@@ -23,14 +23,18 @@ class LedgerMemberSerializer(serializers.ModelSerializer):
     def get_used_year_budget(self, obj):
         current_year = datetime.now().year
         entries = obj.ledger.entries.filter(date_created__year=current_year)
+        entries = entries.filter(user=obj.member)
         entries = entries.filter(entry_type='expense')
-        return abs(sum([entry.amount for entry in entries]))
+        entries = entries.filter(review_status='approved')
+        return sum([abs(entry.amount) for entry in entries])
     
     def get_used_month_budget(self, obj):
         current_month = datetime.now().month
         entries = obj.ledger.entries.filter(date_created__month=current_month)
+        entries = entries.filter(user=obj.member)
         entries = entries.filter(entry_type='expense')
-        return abs(sum([entry.amount for entry in entries]))
+        entries = entries.filter(review_status='approved')
+        return sum([abs(entry.amount) for entry in entries])
 
     class Meta:
         model = LedgerMember
@@ -105,13 +109,15 @@ class LedgerDetailSerializer(serializers.ModelSerializer):
             current_year = datetime.now().year
             entries = obj.entries.filter(date_created__year=current_year)
             entries = entries.filter(entry_type='expense')
-            return abs(sum([entry.amount for entry in entries]))
+            entries = entries.filter(review_status='approved')
+            return sum([abs(entry.amount) for entry in entries])
         
         def get_used_month_budget(self, obj):
             current_month = datetime.now().month
             entries = obj.entries.filter(date_created__month=current_month)
             entries = entries.filter(entry_type='expense')
-            return abs(sum([entry.amount for entry in entries]))
+            entries = entries.filter(review_status='approved')
+            return sum([abs(entry.amount) for entry in entries])
         
         class Meta:
             model = Ledger
