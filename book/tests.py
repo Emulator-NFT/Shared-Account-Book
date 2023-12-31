@@ -298,7 +298,173 @@ class TestEntry(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+class TestLedgerMember(TestCase):
+    def setUp(self) -> None:
+        user = MyUser.objects.create_user(
+            username="woshixiaohei",
+            password="nishihaoren"
+        )
+        user.save()
+        # 账本成员
+        user = MyUser.objects.create_user(
+            username="woshixiaohei2",
+            password="nishihaoren"
+        )
+        user.save()
+        
+        self.client = Client()
+        self.headers = self.login()
+        self.ledger_id = self.create_ledger()   
+        self.member_id = self.create_member()
 
+    def login(self):
+        data = {
+            "username": "woshixiaohei",
+            "password": "nishihaoren",
+        }
+        response = self.client.post(
+            '/users/login/',
+            data=data,
+            content_type="application/json"
+        )
+        json_data = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(json_data['token'])
+        self.token = json_data['token']
+        headers = {
+            'Authorization': 'Token ' + self.token
+        }
+        return headers
+    
+    def login2(self):
+        data = {
+            "username": "woshixiaohei2",
+            "password": "nishihaoren",
+        }
+        response = self.client.post(
+            '/users/login/',
+            data=data,
+            content_type="application/json"
+        )
+        json_data = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(json_data['token'])
+        self.token = json_data['token']
+        headers = {
+            'Authorization': 'Token ' + self.token
+        }
+        return headers
+    
+    def create_ledger(self):
+        data = {
+            "title": "test_ledger",
+            "description": "test_ledger",
+            "ledger_type": "group"
+        }
+        response = self.client.post(
+            '/book/ledgers/',
+            headers=self.headers,
+            data=data,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 201)
+        json_data = response.json()
+        self.assertIsNotNone(json_data['id'])
+        id = json_data['id']
+        return id
+    
+    def create_member(self):
+        data = {
+            "ledger": self.ledger_id,
+            "member": "woshixiaohei2"
+        }
+        response = self.client.post(
+            '/book/ledger-members/',
+            headers=self.headers,
+            data=data,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 201)
+        json_data = response.json()
+        self.assertIsNotNone(json_data['id'])
+        id = json_data['id']
+        return id
+    
+    def test_member_list(self):
+        response = self.client.get(
+            f'/book/ledger-members/?ledger={self.ledger_id}',
+            headers=self.headers,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+    
+    def test_member_update(self):
+        response = self.client.patch(
+            f'/book/ledger-members/{self.member_id}/',
+            headers=self.headers,
+            data={
+                "nickname": "test",
+                "role": "owner"
+            },
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_member_destroy(self):
+        response = self.client.delete(
+            f'/book/ledger-members/{self.member_id}/',
+            headers=self.headers,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 204)
+
+    def test_member_destroy2(self):
+        user = MyUser.objects.create_user(
+            username="woshixiaohei3",
+            password="nishihaoren"
+        )
+        user.save()
+        data = {
+            "ledger": self.ledger_id,
+            "member": "woshixiaohei3"
+        }
+        response = self.client.post(
+            '/book/ledger-members/',
+            headers=self.headers,
+            data=data,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 201)
+        json_data = response.json()
+        self.assertIsNotNone(json_data['id'])
+        member_id2 = json_data['id']
+
+        response = self.client.patch(
+            f'/book/ledger-members/{self.member_id}/',
+            headers=self.headers,
+            data={
+                "nickname": "test",
+                "role": "admin"
+            },
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        headers = self.login2()
+        response = self.client.delete(
+            f'/book/ledger-members/{member_id2}/',
+            headers=headers,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 204)
+
+        response = self.client.delete(
+            f'/book/ledger-members/{self.member_id}/',
+            headers=self.headers,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 204)
+        
 
 
 if __name__ == '__main__':

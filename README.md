@@ -28,7 +28,7 @@ $ coverage run -m unittest discover
 
 覆盖率分析
 ```bash
-$ coverage report
+$ coverage report [-m]
 ```
 
 ## 部署
